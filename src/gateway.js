@@ -47,3 +47,19 @@ export function forwardPanel(req, res, { mount, port, tokenPath, secure = true }
   req.on('aborted', () => upstream.destroy());
   req.pipe(upstream);
 }
+
+// This route exposes only frozen releases, never the operator API or token.
+export function forwardPublicRelease(req, res, port) {
+  if (req.method !== 'GET' || !/^\/releases\/[a-f0-9]{64}\//.test(req.url.split('?')[0])) {
+    res.writeHead(req.method === 'GET' ? 404 : 405); res.end(); return;
+  }
+  const upstream = http.request({ host: '127.0.0.1', port, method: 'GET', path: req.url }, response => {
+    const headers = { 'content-type': response.headers['content-type'] || 'application/octet-stream', 'cache-control': response.headers['cache-control'] || 'no-store', 'x-content-type-options': 'nosniff' };
+    res.writeHead(response.statusCode ?? 502, headers);
+    response.pipe(res);
+  });
+  upstream.setTimeout(30000, () => upstream.destroy(new Error('Release timeout')));
+  upstream.on('error', () => { if (!res.headersSent) { res.writeHead(502); res.end(); } else res.destroy(); });
+  req.on('aborted', () => upstream.destroy());
+  upstream.end();
+}

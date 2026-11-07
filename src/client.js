@@ -25,11 +25,10 @@ window.__ModuleLoader__.load({
             const zh = navigator.language?.toLowerCase().startsWith('zh');
             return h('div', { style: { padding: 24, maxWidth: 680, lineHeight: 1.6 } },
               h('h2', null, 'Humander'),
-              h('p', null, zh ? '面板路由未配置，因此侧栏无法显示。' : 'The panel route is not configured, so the sidebar cannot display it.'),
-              h('p', null, zh ? '若 DSH 与浏览器运行在同一台电脑，可尝试打开本机面板；远程访问需要配置认证网关。' : 'If DSH and your browser run on the same computer, try the local panel. Remote access requires an authenticated gateway.'),
-              h('p', null, zh ? '如果本机面板也无法打开，请先为插件配置私有 stateDir 并重启 DSH。' : 'If the local panel is unavailable too, configure a private stateDir for the plugin and restart DSH.'),
+              h('p', null, zh ? 'Humander 面板尚未启动。请检查插件的启动错误并重启 DSH。' : 'The Humander panel is not running. Check the plugin startup error and restart DSH.'),
+              h('p', null, zh ? '若 DSH 与浏览器运行在同一台电脑，可尝试打开本机面板。远程代理需要转发 /humander/ 路径。' : 'If DSH and your browser run on the same computer, try the local panel. A remote proxy must forward /humander/.'),
               h('p', null, h('a', { href: 'http://127.0.0.1:3088/', target: '_blank', rel: 'noopener noreferrer' }, zh ? '打开本机面板' : 'Open local panel')),
-              h('p', null, zh ? '研究实验目前需要 Linux 的 Bubblewrap；Windows 原生 DSH 尚不能运行完整研究流程。' : 'Research experiments currently require Linux Bubblewrap; native Windows DSH cannot run the complete research workflow yet.'));
+              h('p', null, zh ? 'Windows 原生实验需要 Docker Desktop 的 Linux 容器模式。' : 'Native Windows experiments require Docker Desktop in Linux-container mode.'));
           }
           return h('iframe', {
             title: 'Humander · Human-led research', src: path,

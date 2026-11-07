@@ -7,18 +7,20 @@ This is a working protocol prototype, not a claim of autonomous scientific compe
 ## Requirements and installation
 
 - Node.js 24+, DeepSeek Harness **0.2.2-rc.1** (the tested version).
-- Linux with usable Bubblewrap user namespaces, `/usr/bin/python3` or other required tools under `/usr`, and `pdfinfo`. Native Windows can install the package but cannot execute the Linux-only experiment sandbox in this release; run DSH and Humander inside WSL2 for the complete workflow.
-- Tectonic with a prepared dependency cache. Compilation is offline (`--only-cached`).
+- Linux: usable Bubblewrap user namespaces, `/usr/bin/python3` or other required tools under `/usr`, and `pdfinfo`.
+- Native Windows: Docker Desktop in **Linux containers** mode and a locally pulled `python:3.12-slim` image for isolated experiments. DSH and this plugin run in Windows; Docker supplies the experiment sandbox. Install Tectonic and `pdfinfo.exe` on Windows and configure their executable paths if they are not on `PATH`.
+- Tectonic with a prepared dependency cache on either platform. Compilation is offline (`--only-cached`). Chinese publications also need the Noto Serif CJK SC font installed on the host.
 - Configured Harness model providers. The default three independent reviews per paper require at least four distinct model IDs; model identity is supplied by the human, not independently inferred from API aliases.
 
-Install into the DSH profile that serves your browser UI. On another machine,
-clone the repository and build the installable archive locally:
+In the DSH **Plugins → Add plugin** field, enter `https://github.com/ShirasaMachi/humander.git`, install and enable it. The plugin starts its human panel using `DSH_HOME/humander-state` (or `~/.dsh/humander-state` when `DSH_HOME` is unset), and registers `/humander/` on DSH's authenticated web server. Open the Humander sidebar after restarting DSH. Existing projects keep their configured `stateDir`.
+
+Alternatively, clone the repository and build an installable archive locally:
 
 ```sh
 git clone https://github.com/ShirasaMachi/humander.git
 cd humander
 npm pack --ignore-scripts
-dsh plugin --profile web add "$PWD/dsh-humander-0.4.1.tgz"
+dsh plugin --profile web add "$PWD/dsh-humander-0.5.0.tgz"
 ```
 
 Replace `web` with the name of your actual browser-serving profile. Restart that
@@ -29,8 +31,7 @@ installing a newer archive alone does not migrate another machine's data.
 
 The tested archive installation reports missing peer packages in the profile's package-manager check; Harness supplies these through its host module resolver, and the installed archive starts successfully. Launch it through Harness rather than importing the installed profile package in a standalone Node process.
 
-In `~/.dsh/profiles/web/cordis.patch.yml`, add or update the `humander` entry.
-Keep the other entries in that file. Use paths that exist on that machine:
+For a custom state directory or executables, add or update the `humander` entry in the browser profile's `cordis.patch.yml`. Keep the other entries in that file. For example, on Linux:
 
 ```yaml
 - id: humander
@@ -40,23 +41,18 @@ Keep the other entries in that file. Use paths that exist on that machine:
     autoRun: false
     publicBaseUrl: ''
     tectonic: /absolute/path/to/tectonic
+    pdfinfo: /absolute/path/to/pdfinfo
     texCache: /absolute/path/to/tex-cache
     bwrap: /usr/bin/bwrap
 ```
 
-The configuration supplies the whole plugin configuration object. Preserve these fields when adding a command-line patch. An empty `stateDir` installs the plugin without starting an organization.
+On Windows, the file is typically `%USERPROFILE%\.dsh\profiles\web\cordis.patch.yml`. Use forward slashes in YAML paths, for example `stateDir: 'C:/Users/Alice/.dsh/humander-state'`, `tectonic: 'C:/tools/tectonic.exe'`, and `pdfinfo: 'C:/tools/pdfinfo.exe'`. Run `docker pull python:3.12-slim` once before the first experiment. `sandboxBackend: auto` selects Docker on Windows and Bubblewrap on Linux. A custom `dockerImage` must be pulled beforehand. The configuration supplies the whole plugin configuration object; preserve these fields when adding a command-line patch.
 
 ```sh
 dsh --profile web --no-open
 ```
 
-The Humander panel listens only on `127.0.0.1:3088`, independently of the DSH
-web port. On the host, open that URL and enter the token in
-`stateDir/operator.token`. From another computer, use an SSH tunnel such as
-`ssh -L 3088:127.0.0.1:3088 your-dsh-host`, then open
-`http://127.0.0.1:3088` locally. Keep the token private. To use the native
-Humander sidebar in a remotely hosted DSH page, see the authenticated gateway
-integration below; installing the package does not create a public panel route.
+The DSH sidebar uses its existing authenticated browser session. The separate loopback panel at `http://127.0.0.1:3088` remains available for local diagnostics and asks for the token in `stateDir/operator.token`. Keep that token private.
 
 ## Running a project
 
@@ -88,7 +84,7 @@ The ACL PDF generator supports both languages and preserves the original human r
 
 ### Open experimental releases
 
-Before research submissions, configure `publicBaseUrl` to a publicly reachable origin that proxies only the plugin's `/releases/` route. Never expose the operator token or management API as part of that route. Empty configuration deliberately blocks submission eligibility. Loopback is suitable for integration tests, not a claim of an Internet-public release.
+Before research submissions, configure `publicBaseUrl` to a publicly reachable DSH origin. When configured, the plugin registers a public `/releases/` route on DSH's web server that serves only frozen release files. Never expose the operator token or management API through a separate public proxy. Empty configuration deliberately blocks submission eligibility. Loopback is suitable for integration tests, not a claim of an Internet-public release.
 
 The plugin freezes the actual experiment input code, output files, command, exit status, timing and output. It generates an ACL-format paper and SHA-256 manifest, then retrieves and verifies the manifest and every released file through the configured public URL. Version 0.2 supports explicit MIT-licensed releases. The operator is responsible for having rights to release submitted material and for keeping the configured public origin available.
 
@@ -96,9 +92,9 @@ Papers have structured sections: `abstract`, `introduction`, `relatedWork`, `met
 
 ## Harness sidebar and authenticated gateway
 
-Version 0.4.1 registers a **Humander** sidebar panel through Harness's native client plugin slots. Install into the profile serving the interface you actually use (`web` for `dsh web`). The sidebar expects an authenticated `humander/` child path under the app mount, for example `/dsh/humander/`. DSH does not create that route automatically. If the route is missing, the sidebar now explains how to open the local panel or integrate an authenticated gateway instead of showing a blank page. Do not run two plugin instances against the same `stateDir`.
+Version 0.5.0 registers a **Humander** sidebar panel and its `/humander/` server route in the DSH web profile. The route checks DSH's browser session and forwards to the private panel without revealing its operator token. A reverse proxy serving DSH under a path prefix must forward that child route to DSH as well. Do not run two plugin instances against the same `stateDir`.
 
-The deployment gateway imports `forwardPanel` from `src/gateway.js` and calls it **only after validating its operator login session**, for requests to the mount or its descendants. Pass `{ mount: '/dsh/humander', port: 3088, tokenPath: '/absolute/state/operator.token', secure: true }`. The gateway retains the operator token on the server, allows same-origin embedding, and requires same-origin JSON for mutations. The panel uses relative API URLs and connects automatically behind this gateway. Direct loopback access still requires the operator token. This adapter assumes that authenticated gateway users are trusted human operators.
+Deployments with a separate login gateway can still import `forwardPanel` from `src/gateway.js`, but must call it only after authenticating the operator. The built-in DSH route requires no such adapter.
 
 Public research releases need their own explicitly configured public URL; the authenticated management route is not a public release endpoint.
 
@@ -107,7 +103,7 @@ Public research releases need their own explicitly configured public URL; the au
 - Protocol state and events use one SQLite database; failed commands roll back.
 - Workers receive scoped `humander_*` tools. Inherited shell, plugin-manager, cross-session and subagent tools are excluded and guarded.
 - Workers can write only their own `src/`, `experiments/` and temporary `scratch/` files. Extra prose documents go through the three publication categories rather than ad hoc files.
-- Experiments use Bubblewrap with no network, host home or daemon socket; input code is separately mounted read-only. There is no unsandboxed fallback. Runtime/output limits and retained-artifact budgets apply. This is not a defense against kernel vulnerabilities or a complete filesystem quota implementation.
+- Experiments use Bubblewrap on Linux or a Docker Desktop Linux container on Windows. Both disable network access and mount frozen input read-only. The Docker backend uses a read-only root, drops capabilities and limits memory, CPU and process count; it never mounts the Docker socket. There is no unsandboxed fallback. Runtime/output limits and retained-artifact budgets apply. This is not a defense against kernel or container-runtime vulnerabilities or a complete filesystem quota implementation.
 - Independent reviewers can rerun assigned frozen experiments in fresh sandboxes, with a concrete question and at most two reruns per reviewer per experiment. Matching output is evidence of reproducibility, not proof of scientific correctness.
 - Model request counts persist across restarts. Research uses the configured interval budget; other roles have a maximum of 24 requests per actor, phase and assigned paper.
 - A missing sandbox, compiler, public release endpoint or sufficient evidence blocks the affected action and appears in the human panel.
@@ -158,7 +154,7 @@ State migration from 0.1 is additive. Existing definitions, papers and historica
 
 ## Operating boundaries
 
-One organization runs per private state directory. This release targets Linux, the tested Harness version, offline ACL typesetting, explicitly MIT-licensed public experimental releases, and configured provider routes. Arbitrary LaTeX, private essential datasets and arbitrary Internet/shell access are intentionally outside the worker tool surface. They are not required to operate the defined meeting protocol.
+One organization runs per private state directory. This release targets Linux and native Windows with Docker Desktop's Linux-container mode, the tested Harness version, offline ACL typesetting, explicitly MIT-licensed public experimental releases, and configured provider routes. Arbitrary LaTeX, private essential datasets and arbitrary Internet/shell access are intentionally outside the worker tool surface. They are not required to operate the defined meeting protocol.
 
 Scientific independence, originality, chosen-language compliance, faithful summaries and experiment adequacy require substantive review; schemas and exact-record audits do not establish them. Provider aliases cannot prove distinct underlying model identities. Matching reproduction output does not prove a scientific claim. Long-term research quality and human-attention savings require empirical evaluation. The plugin does not install models, select provider accounts or fabricate missing evidence.
 
@@ -174,7 +170,8 @@ HUMANDER_TEX_CACHE=/path/to/cache npm test
 # Complete integration against the real Harness and sandbox:
 HUMANDER_DSH_BIN=/absolute/path/to/dsh \
 HUMANDER_TECTONIC=/path/to/tectonic \
-HUMANDER_TEX_CACHE=/path/to/cache npm test
+HUMANDER_TEX_CACHE=/path/to/cache \
+HUMANDER_DOCKER_IMAGE=python:3.12-slim npm test
 ```
 
 The two test files cover mandatory submissions, confidentiality, stale versions, exact publication barriers, amendments, unavailable inspectors, cross-meeting appeals, retractions, reviewer turnover, recovery budgets, isolation and real ACL compilation. The real-Harness integration runs three research meetings with sandboxed experiments, factual audits, a replacement model, historical case reviews, an actual process restart and human adoption. Its deterministic adapter validates protocol behavior rather than scientific judgment.

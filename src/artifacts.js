@@ -26,7 +26,7 @@ export class Artifacts {
     const compiler = this.config.tectonic || 'tectonic';
     const result = await runProcess(compiler, ['--only-cached', '--outdir', dir, join(dir, 'paper.tex')], { signal, timeoutMs: 60000, env: { ...process.env, ...(this.config.texCache ? { XDG_CACHE_HOME: this.config.texCache } : {}) } });
     requireThat(result.code === 0, `Paper compilation failed: ${result.output.slice(-2500)}`);
-    const info = await runProcess('pdfinfo', [join(dir, 'paper.pdf')], { signal, timeoutMs: 10000 });
+    const info = await runProcess(this.config.pdfinfo || 'pdfinfo', [join(dir, 'paper.pdf')], { signal, timeoutMs: 10000 });
     const pages = Number(info.output.match(/^Pages:\s+(\d+)/m)?.[1]);
     requireThat(pages >= 1 && pages <= 10, `Paper must have 1–10 pages; got ${pages || 'unknown'}`);
     return { pages, hash: sha(readFileSync(join(dir, 'paper.pdf'))) };

@@ -1,16 +1,16 @@
 import { mkdirSync, readFileSync, writeFileSync, readdirSync, lstatSync, realpathSync, existsSync, cpSync, rmSync } from 'node:fs';
-import { resolve, join, relative, dirname, isAbsolute } from 'node:path';
+import { resolve, join, relative, dirname, isAbsolute, sep } from 'node:path';
 import { spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { requireThat, text, digest } from './protocol.js';
 
 /** Paths and execution stay below a worker-owned tree, not the host's home. */
 export function safePath(root, name, { write = false } = {}) {
-  requireThat(typeof name === 'string' && name.length > 0 && !isAbsolute(name), 'Use a relative path');
+  requireThat(typeof name === 'string' && name.length > 0 && !isAbsolute(name) && !/[\\:\0]/.test(name), 'Use a portable relative path');
   const base = realpathSync(root), target = resolve(base, name);
-  requireThat(target.startsWith(base + '/'), 'Path escapes workspace');
+  requireThat(target.startsWith(base + sep), 'Path escapes workspace');
   let cursor = base;
-  for (const part of relative(base, target).split('/')) {
+  for (const part of relative(base, target).split(sep)) {
     cursor = join(cursor, part);
     try { requireThat(!lstatSync(cursor).isSymbolicLink(), 'Symlinks are forbidden'); }
     catch (error) { if (error.code !== 'ENOENT') throw error; }
@@ -92,7 +92,8 @@ export class Workspaces {
     mkdirSync(join(outputDir, 'scratch'));
     const started = Date.now();
     const execution = await this.execute(inputDir, outputDir, request.command, signal);
-    const record = { id: runId, worker: actor, generation: this.protocol.member(s, actor).generation, sourceHash, command: request.command, questionId: request.questionId, purpose: request.purpose, stopCondition: request.stopCondition, repeatReason: request.repeatReason ?? null, filePurposes: Object.fromEntries(files.filter(f => !f.path.startsWith('scratch/')).map(f => [f.path, s.runtime.filePurposes?.[`${actor}:${this.protocol.member(s,actor).generation}:${f.path}`] ?? { questionId: request.questionId, reason: 'Input to the declared experiment.' }])), environment: { platform: process.platform, architecture: process.arch, runtime: process.version, filesystem: 'Read-only host /usr; no network; working directory /workspace; frozen source /input.' }, startedAt: started, durationMs: Date.now() - started, ...execution };
+    const backend = this.sandboxBackend();
+    const record = { id: runId, worker: actor, generation: this.protocol.member(s, actor).generation, sourceHash, command: request.command, questionId: request.questionId, purpose: request.purpose, stopCondition: request.stopCondition, repeatReason: request.repeatReason ?? null, filePurposes: Object.fromEntries(files.filter(f => !f.path.startsWith('scratch/')).map(f => [f.path, s.runtime.filePurposes?.[`${actor}:${this.protocol.member(s,actor).generation}:${f.path}`] ?? { questionId: request.questionId, reason: 'Input to the declared experiment.' }])), environment: { platform: process.platform, architecture: process.arch, runtime: process.version, sandbox: backend, filesystem: backend === 'docker' ? 'Read-only container root; no network; working directory /workspace; frozen source /input.' : 'Read-only host /usr; no network; working directory /workspace; frozen source /input.' }, startedAt: started, durationMs: Date.now() - started, ...execution };
     this.validateOutput(outputDir, s.rules.maxWorkspaceBytes);
     inventory(runDir); // Reject symlink/special-file payloads before they can be published.
     writeFileSync(join(dir, `${runId}.json`), JSON.stringify(record, null, 2), { flag: 'wx' });
@@ -123,7 +124,20 @@ export class Workspaces {
     // Reproduction results have been attached to the published meeting record.
     rmSync(join(this.root, 'reproductions', s.meeting.id), { recursive: true, force: true });
   }
+  sandboxBackend() { return this.config.sandboxBackend === 'auto' || !this.config.sandboxBackend ? (process.platform === 'win32' ? 'docker' : 'bubblewrap') : this.config.sandboxBackend; }
   async execute(inputDir, outputDir, command, signal) {
+    if (this.sandboxBackend() === 'docker') {
+      const docker = this.config.docker || 'docker', image = this.config.dockerImage || 'python:3.12-slim';
+      const inspected = await runProcess(docker, ['image', 'inspect', '--format', '{{.Id}}', image], { signal, timeoutMs: 10000 });
+      requireThat(inspected.code === 0 && /^sha256:[a-f0-9]{64}$/m.test(inspected.output.trim()), 'Docker sandbox unavailable or configured image not pulled');
+      const container = `humander-${randomUUID()}`;
+      const args = ['run', '--rm', '--pull=never', '--name', container, '--network', 'none', '--read-only', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--pids-limit', '64', '--memory', '512m', '--cpus', '1', '--tmpfs', '/tmp:rw,nosuid,size=64m', '--mount', `type=bind,source=${resolve(inputDir)},target=/input,readonly`, '--mount', `type=bind,source=${resolve(outputDir)},target=/workspace`, '--workdir', '/workspace', '--env', 'HOME=/tmp', image, '/bin/bash', '-lc', command];
+      let execution;
+      try { execution = await runProcess(docker, args, { signal, timeoutMs: this.protocol.state.rules.experimentSeconds * 1000 }); }
+      finally { await runProcess(docker, ['rm', '-f', container], { timeoutMs: 5000 }).catch(() => {}); }
+      requireThat(execution.code !== 125, `Docker sandbox unavailable: ${execution.output.slice(0, 500)}`);
+      return { ...execution, imageId: inspected.output.trim() };
+    }
     const bwrap = this.config.bwrap ?? '/usr/bin/bwrap';
     const args = ['--die-with-parent', '--unshare-all', '--new-session', '--cap-drop', 'ALL', '--clearenv', '--ro-bind', '/usr', '/usr', '--symlink', 'usr/bin', '/bin', '--symlink', 'usr/lib', '/lib', '--symlink', 'usr/lib64', '/lib64', '--proc', '/proc', '--dev', '/dev', '--tmpfs', '/tmp', '--ro-bind', inputDir, '/input', '--bind', outputDir, '/workspace', '--chdir', '/workspace', '--setenv', 'PATH', '/usr/bin:/bin', '--setenv', 'HOME', '/tmp', '/bin/bash', '-lc', command];
     const execution = await runProcess(bwrap, args, { signal, timeoutMs: this.protocol.state.rules.experimentSeconds * 1000 });

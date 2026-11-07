@@ -1,6 +1,6 @@
 {
   "name": "dsh-humander",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Human-led research meetings, mandatory submissions and reviewed public memory for DeepSeek Harness.",
   "type": "module",
   "license": "MIT",

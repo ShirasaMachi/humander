@@ -132,8 +132,15 @@ test('workspace rejects traversal, dangling symlinks and extra prose documents',
   const w = new Workspaces(join(root, 'work'), p, {}), workspace = w.path('a');
   assert.throws(() => w.write('a', '../escape.py', 'x', 'Q1', 'test'), /Only/);
   assert.throws(() => safePath(workspace, '../escape', { write: true }), /escapes/);
-  symlinkSync(join(root, 'missing'), join(workspace, 'src', 'link'));
-  assert.throws(() => safePath(workspace, 'src/link/file.py', { write: true }), /Symlinks/);
+  assert.throws(() => safePath(workspace, 'src\\escape.py', { write: true }), /portable/);
+  assert.throws(() => safePath(workspace, 'C:escape.py', { write: true }), /portable/);
+  try {
+    symlinkSync(join(root, 'missing'), join(workspace, 'src', 'link'));
+    assert.throws(() => safePath(workspace, 'src/link/file.py', { write: true }), /Symlinks/);
+  } catch (error) {
+    if (process.platform !== 'win32' || !['EPERM', 'EACCES'].includes(error.code)) throw error;
+    t.diagnostic('Windows runner cannot create a test symlink without developer privileges');
+  }
   assert.throws(() => w.write('a', 'src/report.md', 'A new report', 'Q1', 'test'), /Prose/);
 });
 
@@ -142,6 +149,29 @@ test('missing sandbox fails closed and never executes experiment code on host', 
   const w = new Workspaces(join(root, 'work'), p, { bwrap: '/nonexistent/humander-sandbox' });
   w.write('a', 'src/main.py', 'print(1)', 'Q1', 'Implement the baseline.');
   await assert.rejects(w.experiment('a', { command: 'python3 src/main.py', questionId: 'Q1', purpose: 'Measure baseline', stopCondition: 'One execution' }), /ENOENT/);
+});
+
+test('Docker sandbox keeps experiment input read-only and denies network', { skip: !process.env.HUMANDER_DOCKER_IMAGE, timeout: 120000 }, async t => {
+  const { p, root } = setup(t); define(p); publish(p);
+  const w = new Workspaces(join(root, 'work'), p, { sandboxBackend: 'docker', dockerImage: process.env.HUMANDER_DOCKER_IMAGE });
+  w.write('a', 'src/main.py', [
+    'from pathlib import Path',
+    'import socket',
+    'try:',
+    "    Path('/input/src/main.py').write_text('changed')",
+    "    raise RuntimeError('input was writable')",
+    'except OSError: pass',
+    'try:',
+    "    socket.create_connection(('1.1.1.1', 80), timeout=1)",
+    "    raise RuntimeError('network was available')",
+    'except OSError: pass',
+    "Path('/workspace/experiments/result.txt').write_text('isolated')",
+  ].join('\n'), 'Q1', 'Check isolated execution.');
+  const record = await w.experiment('a', { command: 'python3 /input/src/main.py', questionId: 'Q1', purpose: 'Check isolation', stopCondition: 'One run' });
+  assert.equal(record.code, 0, record.output);
+  assert.match(record.imageId, /^sha256:[a-f0-9]{64}$/);
+  assert.equal(readFileSync(join(root, 'work', 'runs', 'a', record.id, 'output', 'experiments', 'result.txt'), 'utf8'), 'isolated');
+  assert.match(readFileSync(join(root, 'work', 'runs', 'a', record.id, 'input', 'src', 'main.py'), 'utf8'), /from pathlib/);
 });
 
 test('ACL publication compilation escapes source text and enforces the rendered page limit', { skip: !process.env.HUMANDER_TECTONIC }, async t => {
@@ -347,7 +377,7 @@ test('sidebar explains a missing gateway instead of showing an empty panel', asy
   probe(); await new Promise(resolve => setImmediate(resolve));
   const fallback = Panel();
   assert.equal(fallback.type, 'div');
-  assert.match(JSON.stringify(fallback), /面板路由未配置/);
+  assert.match(JSON.stringify(fallback), /Humander 面板尚未启动/);
   assert.match(JSON.stringify(fallback), /http:\/\/127\.0\.0\.1:3088\//);
 });
 

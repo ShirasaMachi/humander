@@ -79,7 +79,7 @@ const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 test('real Harness: three research meetings, amendment, factual audits, replacement, historical review, restart and adoption', { skip: !process.env.HUMANDER_DSH_BIN || !process.env.HUMANDER_TECTONIC, timeout: 180000 }, async t => {
   const root = mkdtempSync(join(tmpdir(), 'humander-harness-'));
-  const stateDir = join(root, 'state'), dshHome = join(root, 'dsh-home'), profile = join(dshHome, 'profiles', 'humander');
+  const dshHome = join(root, 'dsh-home'), stateDir = join(dshHome, 'humander-state'), profile = join(dshHome, 'profiles', 'humander');
   const port = await freePort(), webPort = await freePort();
   const project = fileURLToPath(new URL('../', import.meta.url));
   mkdirSync(join(profile, 'node_modules'), { recursive: true });
@@ -87,7 +87,7 @@ test('real Harness: three research meetings, amendment, factual audits, replacem
   writeFileSync(join(profile, 'package.json'), JSON.stringify({ name: 'humander-integration-profile', private: true, dependencies: { 'dsh-humander': `link:${project}` }, dsh: { profile: { bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', 'dsh-humander'] } } }));
   const fixtureFile = join(root, 'fixture.mjs');
   writeFileSync(fixtureFile, fixtureSource.replace('LLM_MODULE_URL', pathToFileURL(require.resolve('@deepseek-ai/dsh-llm')).href));
-  const patch = [{ id: 'humander', config: { stateDir, port, autoRun: false, publicBaseUrl: `http://127.0.0.1:${port}`, tectonic: process.env.HUMANDER_TECTONIC, texCache: process.env.HUMANDER_TEX_CACHE || '', bwrap: '/usr/bin/bwrap' } }, { insert: [{ id: 'humander-fixture', name: fixtureFile }] }];
+  const patch = [{ id: 'humander', config: { port, autoRun: false, publicBaseUrl: `http://127.0.0.1:${webPort}`, tectonic: process.env.HUMANDER_TECTONIC, texCache: process.env.HUMANDER_TEX_CACHE || '', bwrap: '/usr/bin/bwrap' } }, { insert: [{ id: 'humander-fixture', name: fixtureFile }] }];
   writeFileSync(join(profile, 'cordis.patch.yml'), JSON.stringify(patch));
   let child = spawn(process.env.HUMANDER_DSH_BIN, ['--profile', 'humander', '--no-open', '--host', '127.0.0.1', '--port', String(webPort)], { cwd: project, env: { ...process.env, DSH_HOME: dshHome }, stdio: ['ignore', 'pipe', 'pipe'] });
   let logs = ''; child.stdout.on('data', b => { logs += b; }); child.stderr.on('data', b => { logs += b; });
@@ -96,6 +96,22 @@ test('real Harness: three research meetings, amendment, factual audits, replacem
   let ready = false;
   for(let n=0;n<150;n++){try{if((await fetch(base)).ok){ready=true;break;}}catch{} if(child.exitCode!==null)break; await delay(100);}
   assert.ok(ready, 'Harness startup failed: '+logs.replace(/token=[^\s]+/g,'token=[redacted]').slice(-3000));
+  const webBase = `http://127.0.0.1:${webPort}`;
+  let routeStatus;
+  for (let n = 0; n < 50; n++) {
+    routeStatus = (await fetch(webBase + '/humander/')).status;
+    if (routeStatus !== 404) break;
+    await delay(100);
+  }
+  assert.equal(routeStatus, 401, 'The panel route requires DSH authentication: ' + logs.replace(/token=[^\s]+/g, 'token=[redacted]').slice(-1500));
+  const launchUrl = logs.match(/dsh web: (\S+)/)?.[1];
+  assert.ok(launchUrl, 'DSH did not announce its login URL');
+  const login = await fetch(launchUrl, { redirect: 'manual' });
+  const cookie = login.headers.get('set-cookie')?.split(';')[0];
+  assert.ok(cookie, 'DSH did not issue a browser session');
+  const embedded = await fetch(webBase + '/humander/', { headers: { cookie } });
+  assert.equal(embedded.status, 200);
+  assert.match(await embedded.text(), /name="humander-gateway"/);
   const token = readFileSync(join(stateDir,'operator.token'),'utf8').trim();
   async function api(path,body){const r=await fetch(base+path,{method:body?'POST':'GET',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined}); const out=await r.json(); assert.equal(r.status,200,JSON.stringify(out));return out;}
   assert.equal((await fetch(base+'/api/state')).status,401);
