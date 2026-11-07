@@ -319,13 +319,36 @@ test('native sidebar activates without host config and resolves the app mount', 
     runInNewContext(readFileSync(new URL('../src/client.js', import.meta.url), 'utf8'), {
       window: { __ModuleLoader__: { load: e => { entry = e; } } }, location: { pathname },
     });
-    const plugin = entry.factory(() => ({ createElement: (type, props) => ({ type, props }) }));
+    const plugin = entry.factory(() => ({ createElement: (type, props) => ({ type, props }), useEffect: () => {}, useState: () => ['ready', () => {}] }));
     const registrations = [];
     plugin.apply({ effect: fn => [...fn()], slots: { inject: (_, fn) => fn(), register: (options, component) => registrations.push({ options, component }) } });
     const main = registrations.find(r => r.options.name === 'main');
     assert.equal(main.component().props.src, pathname === '/' ? '/humander/' : '/dsh/humander/');
     assert.equal(registrations.find(r => r.options.name === 'sidebar.panellist').options.id, main.options.key);
   }
+});
+
+test('sidebar explains a missing gateway instead of showing an empty panel', async () => {
+  const { runInNewContext } = await import('node:vm');
+  let entry, route = 'checking', probe;
+  runInNewContext(readFileSync(new URL('../src/client.js', import.meta.url), 'utf8'), {
+    window: { __ModuleLoader__: { load: e => { entry = e; } } },
+    location: { pathname: '/dsh/' }, navigator: { language: 'zh-CN' },
+    fetch: async () => ({ ok: true, headers: { get: () => 'text/html' }, text: async () => '<html>DSH</html>' }),
+  });
+  const plugin = entry.factory(() => ({
+    createElement: (type, props, ...children) => ({ type, props: { ...props, children } }),
+    useEffect: callback => { probe = callback; }, useState: () => [route, next => { route = next; }],
+  }));
+  const registrations = [];
+  plugin.apply({ effect: fn => [...fn()], slots: { inject: (_, fn) => fn(), register: (options, component) => registrations.push({ options, component }) } });
+  const Panel = registrations.find(r => r.options.name === 'main').component;
+  assert.equal(Panel().type, 'div');
+  probe(); await new Promise(resolve => setImmediate(resolve));
+  const fallback = Panel();
+  assert.equal(fallback.type, 'div');
+  assert.match(JSON.stringify(fallback), /面板路由未配置/);
+  assert.match(JSON.stringify(fallback), /http:\/\/127\.0\.0\.1:3088\//);
 });
 
 test('saved team survives restart, validates review diversity and keeps the secretary outside the worker count', t => {

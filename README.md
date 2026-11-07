@@ -7,7 +7,7 @@ This is a working protocol prototype, not a claim of autonomous scientific compe
 ## Requirements and installation
 
 - Node.js 24+, DeepSeek Harness **0.2.2-rc.1** (the tested version).
-- Linux with usable Bubblewrap user namespaces, `/usr/bin/python3` or other required tools under `/usr`, and `pdfinfo`.
+- Linux with usable Bubblewrap user namespaces, `/usr/bin/python3` or other required tools under `/usr`, and `pdfinfo`. Native Windows can install the package but cannot execute the Linux-only experiment sandbox in this release; run DSH and Humander inside WSL2 for the complete workflow.
 - Tectonic with a prepared dependency cache. Compilation is offline (`--only-cached`).
 - Configured Harness model providers. The default three independent reviews per paper require at least four distinct model IDs; model identity is supplied by the human, not independently inferred from API aliases.
 
@@ -18,7 +18,7 @@ clone the repository and build the installable archive locally:
 git clone https://github.com/ShirasaMachi/humander.git
 cd humander
 npm pack --ignore-scripts
-dsh plugin --profile web add "$PWD/dsh-humander-0.4.0.tgz"
+dsh plugin --profile web add "$PWD/dsh-humander-0.4.1.tgz"
 ```
 
 Replace `web` with the name of your actual browser-serving profile. Restart that
@@ -96,7 +96,7 @@ Papers have structured sections: `abstract`, `introduction`, `relatedWork`, `met
 
 ## Harness sidebar and authenticated gateway
 
-Version 0.4.0 registers a **Humander** sidebar panel through Harness's native client plugin slots. Install into the profile serving the interface you actually use (`web` for `dsh web`). The sidebar expects an authenticated `humander/` child path under the app mount, for example `/dsh/humander/`. DSH does not create that route automatically, so the sidebar will be empty until you integrate it into your existing authenticated gateway. The direct loopback panel and SSH tunnel above work without this integration. Do not run two plugin instances against the same `stateDir`.
+Version 0.4.1 registers a **Humander** sidebar panel through Harness's native client plugin slots. Install into the profile serving the interface you actually use (`web` for `dsh web`). The sidebar expects an authenticated `humander/` child path under the app mount, for example `/dsh/humander/`. DSH does not create that route automatically. If the route is missing, the sidebar now explains how to open the local panel or integrate an authenticated gateway instead of showing a blank page. Do not run two plugin instances against the same `stateDir`.
 
 The deployment gateway imports `forwardPanel` from `src/gateway.js` and calls it **only after validating its operator login session**, for requests to the mount or its descendants. Pass `{ mount: '/dsh/humander', port: 3088, tokenPath: '/absolute/state/operator.token', secure: true }`. The gateway retains the operator token on the server, allows same-origin embedding, and requires same-origin JSON for mutations. The panel uses relative API URLs and connects automatically behind this gateway. Direct loopback access still requires the operator token. This adapter assumes that authenticated gateway users are trusted human operators.
 
