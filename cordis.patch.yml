@@ -1,0 +1,15 @@
+- insert:
+    - id: humander
+      name: dsh-humander
+      config:
+        stateDir: ''
+        port: 3088
+        autoRun: false
+    - id: humander-isolated-preset
+      name: '@deepseek-ai/dsh-agent-preset'
+      config:
+        id: humander-isolated
+        name: humander worker
+        description: Protocol-owned session with scoped humander tools only.
+        order: 95
+        plugins: []

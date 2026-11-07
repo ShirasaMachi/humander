@@ -1,0 +1,398 @@
+\documentclass[11pt]{article}
+\usepackage[preprint]{acl}
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\definecolor{hblue}{HTML}{234B68}
+\definecolor{hlight}{HTML}{EDF3F7}
+\definecolor{hgreen}{HTML}{EAF3EE}
+\definecolor{hamber}{HTML}{FBF2DF}
+\newcommand{\hboxat}[7]{\put(#1,#2){\makebox(0,0){%
+  \fcolorbox{hblue}{#5}{\parbox[c][#4mm][c]{#3mm}{\centering
+  \textbf{#6}\\#7}}}}}
+\title{humander: A Human-Led\\Multi-Agent Research Organization}
+\author{humander\\Architecture design draft --- 6 November 2026}
+\date{}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Autonomous research must preserve human intent without requiring people to manage every step. We propose humander, a human-led research organization whose requirements are defined collectively at an opening meeting. A supervised secretary clarifies expression and summarizes discussion; the human confirms meaning and ratifies research goals and acceptance conditions. Workers investigate independently between meetings. Any worker can open the next meeting when its work warrants discussion, including a useful failure or blocker. Every worker must submit exactly one paper of its own work at each research meeting, with open-source code and experimental evidence. Peer review assesses contributions without requiring positive results. A checked meeting review publishes research commitments, failure experience, consensus, and dissent. Three document classes and claim-linked artifacts constrain accumulation; selective context continuation and evidence-based reviewer accountability support renewal. This paper specifies a process and evaluation plan, without claiming experimental validation.
+
+\end{abstract}
+
+\section{Introduction}
+
+Long-running autonomous research creates an organizational problem. People want agents to investigate, implement, and revise without approving every step, while retaining control over the problem and important trade-offs. Initial requests may contain grammatical errors, omitted context, or ambiguous success criteria. Later, summaries can turn assumptions into apparent requirements, and repeated discussions can obscure whether the original goal has advanced. The challenge is to sustain useful work while keeping interpretation, evidence, and human attention under control.
+
+Several research directions address parts of this challenge. AutoGen provides programmable multi-agent conversations \citep{wu2023autogen}, while MetaGPT organizes collaboration through standardized procedures and differentiated roles \citep{hong2023metagpt}. DeepSeek's Super-agent design essay and prototype examine persistent work and the attention required to maintain it \citep{deepseek2026article,deepseek2026prototype}. These are relevant foundations for thinking about collaboration and continuity; the present paper specifies an organizational process independently of its execution software.
+
+Systems for scientific work provide closer precedents. The AI Scientist-v2 connects hypothesis generation, experimentation, analysis, and manuscript production through agentic search with an experiment manager \citep{yamada2025scientist}. Agent Laboratory accepts a human research idea and supports feedback during literature review, experimentation, and report writing \citep{schmidgall2025laboratory}. The Virtual Lab organizes scientist agents into research meetings led by a Principal Investigator agent, with high-level human feedback \citep{swanson2025virtual}. These designs motivate separating the ability to perform research from the rules governing a research organization.
+
+Other work addresses collective refinement and accumulated knowledge. Co-Scientist uses agents that generate, critique, and refine hypotheses, including tournament-based evolution \citep{gottweis2026coscientist}. AgentRxiv lets agent laboratories share reports through a common preprint server and build on previous findings \citep{schmidgall2025agentrxiv}. The AI Scientific Community proposes decentralized swarms of virtual laboratories and discusses inter-laboratory influence and diversity \citep{braganeto2026community}. Meetings, shared research records, and agent communities therefore have clear precedents; they are not claimed here as individually new ideas.
+
+humander focuses on the following question: how can equal research members continue working toward a human-confirmed problem when their contexts and membership change, while the record used to guide them remains open to collective scrutiny? Our proposed organizing principle is an evidence-linked public record joining human intent, research assessment, and continuation. Publication remains corrigible: acceptance does not establish truth, and a summary cannot silently replace its sources.
+
+The process begins with a definition meeting, where all members examine the original request. The secretary labels suggested additions; the human confirms meaning and ratifies the resulting research goals and acceptance conditions. Workers then investigate independently until any one worker calls a meeting. Every worker must submit exactly one paper of its own work, including informative failures, with open code and experiments. Members review submissions and inspect the secretary's synthesis. There is no scheduler or AI chair; the public record exposes commitments and failures as well as accepted findings.
+
+The proposed contribution joins meeting-based requirement definition, worker supervision of shared memory, and explicit publication and context-transition rules. Bounded document classes constrain accumulation. We hypothesize better progress on the original problem per unit of human attention, with fewer repeated errors and less drift. The following protocol and evaluation plan make this hypothesis testable; no empirical advantage is claimed.
+
+\section{From Human Intent to a Research Definition}
+
+Human leadership requires a shared understanding of the request before autonomous research begins. Figure~\ref{fig:organization} places confirmation of meaning and the research definition inside the opening meeting. Neither step delegates the human's preferences to the secretary.
+
+\begin{figure*}[t]
+\centering
+\begingroup
+\setlength{\unitlength}{1mm}
+\setlength{\fboxsep}{2pt}
+\fontsize{8.5}{10}\selectfont
+\resizebox{\textwidth}{!}{\begin{picture}(166,91)
+\color{hblue}\linethickness{0.45pt}
+\put(83,88){\makebox(0,0){\textbf{DEFINITION MEETING: human, all workers, and secretary}}}
+\hboxat{27}{74}{45}{17}{hlight}{Shared original request}{All members inspect wording,\\context, and preferences}
+\hboxat{83}{74}{45}{17}{white}{Collective clarification}{Workers discuss; secretary\\records labeled interpretations}
+\hboxat{139}{74}{45}{17}{hamber}{Human confirmation 1}{Does this accurately express\\what I want?}
+\put(50.4,74){\vector(1,0){9.2}}
+\put(106.4,74){\vector(1,0){9.2}}
+\put(83,60){\makebox(0,0){\textbf{SAME MEETING: formulate and ratify the research definition}}}
+\hboxat{139}{46}{45}{17}{white}{Members examine intent}{Independent proposals;\\feasibility and disagreement}
+\hboxat{83}{46}{45}{17}{white}{Shared proposed definition}{Goals, scope, evidence,\\acceptance and stop conditions}
+\hboxat{27}{46}{45}{17}{hamber}{Human confirmation 2}{Ratify the research definition;\\resolve value trade-offs}
+\put(139,64.6){\vector(0,-1){9.2}}
+\put(115.6,46){\vector(-1,0){9.2}}
+\put(59.6,46){\vector(-1,0){9.2}}
+\hboxat{83}{19}{152}{13}{hgreen}{Frozen Problem Definition Paper}{One ratified version for every member. Secretary drafts are checked against human statements\\and member proposals. Unresolved assumptions remain visible.}
+\put(27,36.6){\vector(0,-1){10.2}}
+\put(83,5){\makebox(0,0){\textit{If meaning or criteria are disputed, revise the draft and repeat the affected confirmation.}}}
+\put(83,0){\makebox(0,0){\textit{No scheduler or AI chair. Shared goals and evidence do not require identical research judgments.}}}
+\end{picture}}
+\endgroup
+\caption{Requirements begin in a collective meeting. All workers see the original input before the secretary drafts an interpretation. Within that meeting, the human confirms meaning and ratifies goals and acceptance conditions. Versions and corrections remain in one Problem Definition Paper.}
+\label{fig:organization}
+\end{figure*}
+
+\subsection{Requirements Begin in a Meeting}
+
+A new human request opens a definition meeting before research starts. Every worker receives the same original input, including grammatical errors and missing details. Workers independently identify plausible interpretations and consequential omissions, then discuss them together. No private human--secretary conversation determines requirements in advance. Later human amendments enter a meeting; an immediate human stop remains effective outside meetings.
+
+The secretary corrects expression and organizes the discussion into one draft in the project-selected language. Each material clause is marked as human-stated, member-proposed, secretary-proposed, or unresolved, with its source. Suggested use cases or constraints remain proposals. The original input stays available; technical thresholds and preferences cannot be invented to complete the prose. The human confirms the identified interpretation and visible additions. Silence leaves them unconfirmed.
+
+\subsection{Members Formulate Goals and Acceptance Conditions}
+
+Within the same meeting, workers examine feasibility, research questions, missing evidence, and acceptance conditions. They select their own research commitments openly. The secretary records proposals and objections in the Problem Definition Paper, which all workers inspect. It neither assigns work nor selects a winning interpretation. Disagreement remains visible when evidence is insufficient.
+
+The human then ratifies the intended outcome, numbered questions, scope and exclusions, acceptance criteria, resource limits, meeting-transition and review windows, selection settings, and stopping conditions. These two confirmations distinguish accurate interpretation from an achievable research definition; they may occur in one human review of clearly separated decisions. Unconfirmed goals do not become instructions. Routine work within the ratified definition needs no further human approval.
+
+\subsection{A Checkable Acceptance Contract}
+
+Each acceptance condition identifies a requirement and research question, the observable outcome, evaluation setting or data, checking method and responsible checker, pass criterion, and treatment of failure or inconclusive evidence. Subjective criteria use a human-confirmed rubric or examples instead of fabricated precision. Thresholds cannot be relaxed after results arrive without a visible amendment and human confirmation.
+
+Research completion and deliverable acceptance are distinct. A sound demonstration that a target is infeasible can complete a feasibility investigation without making a proposed product acceptable. The definition states which outcome the project seeks. Unresolved prerequisites block dependent claims, while separately defined, unaffected questions may proceed.
+
+Amendments show exactly what changed and why. A change in intent returns to the first confirmation; changed goals or acceptance criteria require the second. Grammar-only corrections that preserve meaning do not reopen substantive decisions. Every member receives the same ratified version.
+
+\subsection{A Supervised, Neutral Secretary}
+
+The secretary has no authority to rank workers, decide truth, select human-facing questions, alter scoring rules, or adopt a research direction. It may quote an existing requirement to resolve a repeated wording question; competing interpretations return to the meeting or human. It uses no emotional persona or model-specific preference. Neutrality is an auditable obligation, not a property guaranteed by a prompt.
+
+All members can inspect the secretary's drafts, sources, omissions, and corrections. The human-facing bulletin is the same checked text that members receive, with links to evidence. There is no private editorial version. Shared goals, rules, and records establish consistency; minority findings and differing judgments remain visible.
+
+Software enforces phase barriers, versions, isolation, and declared review rotation. It does not interpret prose as a command to assign work or change the project. The human decides goals and final adoption, members investigate and scrutinize evidence, and the secretary assists expression and faithfully records the outcome.
+
+\section{Meetings as Communication Boundaries}
+
+\subsection{Independent Research Intervals}
+
+At the end of each meeting, the project freezes a public baseline. During the following interval, each member reads that baseline and works in an isolated workspace. Other members and the secretary cannot inspect its private drafts, unfinished code, logs, or intermediate findings. New human input is discussed at a meeting rather than relayed privately.
+
+This restriction includes indirect communication. Shared folders, commit messages, external messaging services, and files intended as instructions to another agent cannot serve as informal channels. Independent access to external research sources is permitted when the project supports it, but using those sources to exchange messages with project members is not.
+
+A worker investigates difficulties independently and can call a meeting when a failure, blocker, or unresolved requirement warrants collective examination. Readiness means readiness for discussion, not successful task completion. It does not manufacture unrelated tasks to remain active. The human may also convene a meeting or stop work.
+
+\subsection{Any Worker Can Open a Meeting}
+
+One worker's call opens the meeting transition immediately: no vote, quorum, secretary approval, fixed calendar, or scheduler is required. The call starts the submission window for every worker. It is a control event carrying the caller, commitment identifier, and meeting type; substantive findings are shared only inside the meeting. The human initiates the opening definition meeting before research exists; it establishes the problem and first commitments and is the sole meeting exempt from research submissions.
+
+New research actions pause at the call. In-flight experiments may checkpoint within the transition window fixed in the problem definition; unfinished results remain incomplete when it closes. All workers receive the same meeting snapshot. Every worker must prepare exactly one submission by the common cutoff, using its own completed evidence. The submission window permits writing and packaging existing work. Unfinished tasks are reported through bounded findings, failed experiments, or documented limitations; they do not exempt a worker from submission.
+
+Concurrent calls join one meeting. Calls during an open meeting become agenda items; evidence arriving after the submission cutoff waits for the next meeting. A meeting already in progress is not restarted. After checked publication, a worker may immediately call another meeting; no hidden cooldown or approval right is introduced. Repeated calls and their resource costs remain visible in the bulletin.
+
+\subsection{A Meeting Cycle}
+
+Figure~\ref{fig:cycle} shows the cycle and the distinct continuation paths. Publication must complete before any context reset takes effect.
+
+\begin{figure*}[t]
+\centering
+\begingroup
+\setlength{\unitlength}{1mm}
+\setlength{\fboxsep}{2pt}
+\fontsize{8.5}{10}\selectfont
+\resizebox{\textwidth}{!}{\begin{picture}(166,117)
+\color{hblue}\linethickness{0.45pt}
+\hboxat{83}{110}{152}{10}{hlight}{Common published baseline}{Problem definition + recent meeting reviews + relevant accepted papers}
+\hboxat{27}{92}{45}{12}{white}{Member A}{Private context and workspace}
+\hboxat{83}{92}{45}{12}{white}{Member B}{Private context and workspace}
+\hboxat{139}{92}{45}{12}{white}{Member C, \ldots}{Private context and workspace}
+\put(27,104.1){\vector(0,-1){5.2}}
+\put(83,104.1){\vector(0,-1){5.2}}
+\put(139,104.1){\vector(0,-1){5.2}}
+\put(27,85.1){\vector(0,-1){6.2}}
+\put(83,85.1){\vector(0,-1){6.2}}
+\put(139,85.1){\vector(0,-1){6.2}}
+\hboxat{83}{74}{152}{8}{hamber}{Any one worker calls: the meeting opens}{Useful result, informative failure, blocker, or requirement question; no approval needed}
+\put(83,69.1){\vector(0,-1){2.1}}
+\put(2,33){\dashbox{1}(162,34){}}
+\put(83,64){\makebox(0,0){\textbf{MEETING: reaffirm the problem and agenda, then examine submissions}}}
+\hboxat{23}{53}{35}{14}{white}{Mandatory: one each}{Own work; open code\\and experiments}
+\hboxat{63}{53}{35}{14}{white}{Independent reviews}{Hidden until all\\initial reviews close}
+\hboxat{103}{53}{35}{14}{white}{Response and update}{One author response;\\one review update}
+\hboxat{143}{53}{35}{14}{white}{Selection}{Quality gate, then\\capacity policy}
+\put(41.4,53){\vector(1,0){3.2}}
+\put(81.4,53){\vector(1,0){3.2}}
+\put(121.4,53){\vector(1,0){3.2}}
+\hboxat{83}{39}{152}{8}{hgreen}{Worker-checked publication boundary}{Checked bulletin: evidence, commitments, failures, consensus, and dissent}
+\put(143,45.1){\vector(0,-1){1.2}}
+\hboxat{28}{21}{46}{14}{hgreen}{Accepted author}{Keep context and workspace;\\refresh public inputs}
+\hboxat{83}{21}{48}{14}{hamber}{Rejected author}{Close old instance;\\start fresh context and workspace}
+\hboxat{139}{21}{45}{14}{white}{Decision pending}{Submitted paper awaits\\review; no rejection reset}
+\put(28,34.1){\vector(0,-1){5.2}}
+\put(83,34.1){\vector(0,-1){5.2}}
+\put(139,34.1){\vector(0,-1){5.2}}
+\put(28,13.1){\line(0,-1){6.1}}
+\put(83,13.1){\line(0,-1){6.1}}
+\put(139,13.1){\line(0,-1){6.1}}
+\put(0,7){\line(1,0){139}}
+\put(0,7){\line(0,1){103}}
+\put(0,110){\vector(1,0){6.1}}
+\put(80,2){\makebox(0,0){\textit{Continue within the ratified goals and budget; otherwise pause for a human decision}}}
+\end{picture}}
+\endgroup
+\caption{A single worker initiates collective examination; every worker must submit exactly one paper. Papers and open experimental releases freeze before independent review. The checked bulletin publishes commitments and failure experience. Accepted authors continue; rejected authors restart from public material and their submission record. Reviewer accountability is assessed separately.}
+\label{fig:cycle}
+\end{figure*}
+
+The meeting proceeds through six phases. First, members check the ratified problem, earlier unresolved items, and human updates. The secretary presents their submitted agenda items in the declared order, without privately filtering or prioritizing them. Second, every worker freezes exactly one paper of its own work and its open experimental release. Third, eligible reviewers read and score those submissions independently. Initial reviews remain hidden until the review phase closes.
+
+Fourth, the reviews are released and authors respond. Discussion concentrates on disagreements that could change a claim, a score, or the next research action. The reference procedure provides one author response and one reviewer update; unresolved substantive issues are carried forward rather than answered through an unbounded exchange.
+
+Fifth, scores and unresolved objections are frozen and the declared acceptance procedure is applied. Sixth, members record their next commitments and the secretary drafts the meeting review. All members check the draft before publication; accepted papers and the checked review establish the next baseline. Only after this boundary may the next interval begin. Only the opening definition meeting omits research-paper review and selection; it still produces a checked bulletin.
+
+The human can participate in every phase but is not required to attend routine meetings. Matters that change the problem or require a new value judgment wait for the human; other work can continue. Missing responses are recorded as missing. They do not imply agreement or supply an absent review.
+
+\subsection{Preserving Both Agreement and Disagreement}
+
+The meeting distinguishes agreement about a proposition from evidence supporting it. Several agents may agree on an interpretation that remains unverified. Conversely, a well-supported result may coexist with disagreement about its significance. The bulletin records these separately.
+
+Disagreement is attached to a specific claim, assumption, or evaluation criterion. Where possible, it yields a discriminating investigation: an observation that would distinguish competing explanations. Where the disagreement concerns an unresolved human preference, members formulate the options and consequences; the secretary faithfully summarizes their decision request. Counting supporters is not a substitute for either process.
+
+\subsection{Checking the Meeting Review}
+
+The Meeting Review is the public bulletin. Its stable structure covers progress against active questions, evidence, agreements and dissent, submission status, human decisions, research commitments, and failure experience. Every substantive claim links to its source. The secretary cannot add conclusions or filter inconvenient objections.
+
+Each commitment records its worker, question, planned investigation, expected observation, budget, and stopping condition. It cites relevant earlier failures and explains any deliberate repetition. Each failure entry states the attempted approach, conditions, observed outcome, supported explanation and remaining uncertainty, and implication for further work. Unreviewed failures are labeled provisional; acceptance does not make a failure universally applicable. These are compact entries within the bulletin, not separate plans or failure reports.
+
+Every member receives the same draft and a declared inspection window. Checks cover attribution, evidential strength, omissions, and fidelity to human requirements. Verified recording errors are corrected. Scientific disagreements are preserved as attributed alternatives, rather than settled by the secretary or majority agreement.
+
+Publication requires an explicit inspection response from each participating member. A missing response is marked incomplete and holds that boundary until the response arrives or the human explicitly excludes the unavailable member. Exclusion remains visible. A disputed statement can be published as a dispute once its attribution is checked; unanimity about scientific conclusions is unnecessary. Human silence is never used to resolve a disputed requirement.
+
+The published review opens with a short synthesis for the human, followed by the same evidence and positions available to members. It creates no separate executive report. The secretary resets only after this record is checked and published.
+
+\section{Publication as Project Memory}
+
+\subsection{A Small Publication Vocabulary}
+
+The permanent prose collection has three classes. Clarification drafts, both confirmations, and amendments are versions or attached records of the Problem Definition Paper, not additional document classes. The Problem Definition Paper supplies the stable objective. Research Papers present contributions and their evidence. Meeting Reviews synthesize the project's current state, including agreements, disagreements, negative results, human decisions, and next-cycle questions.
+
+All authored working prose and publications use the project-selected language, English or Chinese. Original quotations and human source statements remain available verbatim. Every formal document uses a fixed conference-paper template and is limited to ten compiled pages in total, including references and appendices. The reference typesetting uses the ACL template \citep{aclstyle}; the inclusive ten-page limit is a humander rule, not an ACL submission requirement.
+
+A research paper follows a conventional progression from question and related evidence to method, results, discussion, and limitations. A meeting review is a survey of the evidence and positions considered at that meeting, not a transcript arranged by speaker. Neither document has a minimum length or an obligation to invent a positive result.
+
+Every worker must submit exactly one research paper at each research meeting, reporting its own contribution. Splitting one contribution or using another session does not create another slot. Revisions retain the same paper identity; extensions update that paper. Incomplete work must be reported honestly and assessed on the evidence available. Empty placeholders, unchanged resubmissions, and fabricated experiments do not satisfy the obligation. Informative failed experiments are eligible: their value lies in what they establish, exclude, or reveal about the defined problem, without requiring a positive result.
+
+\subsection{Open Code and Experiments Are Mandatory}
+
+Every research submission links an immutable, publicly accessible release of its code under an explicit open-source license, together with experimental materials. It identifies the exact version, dependencies, commands, configurations, seeds where applicable, data or a redistributable reconstruction, and observed outputs including relevant failed runs. Claimed results must map to those materials. A repository link without runnable evidence is insufficient; unavailable essential data blocks eligibility.
+
+The release occurs at the meeting's submission boundary. Workers use the frozen meeting baseline between meetings, rather than monitoring others' live repositories. Rejected releases remain accessible and visibly unaccepted; public availability and scientific acceptance are distinct. Existing code and experiments are reused with attribution and an explicit account of the worker's contribution. A failed execution can support a failure analysis if its conditions and records are reproducible; an unexecuted idea belongs in discussion, not an evidence-bearing research submission.
+
+The Problem Definition Paper and Meeting Review are organizational publications, not scored research submissions; they cite existing evidence and do not fabricate experiments to qualify. This design manuscript is likewise a protocol proposal, not a completed experimental submission. Project acceptance is not acceptance at ACL.
+
+\subsection{Controlling Accumulation by Purpose}
+
+No additional permanent prose category is created automatically. Plans, personal notes, daily reports, handover documents, and experiment summaries must either contribute to an existing publication or remain temporary. Reviews and author responses are records attached to the reviewed submission, not additional publication classes. Source files, figures, and the rendered PDF are representations of one publication, not separate intellectual outputs.
+
+Retention requires a concrete contribution: new evidence, a corrected conclusion, a useful negative result, or a clarified limitation. Rewording an existing account does not qualify. Version history is maintained by the system rather than by a collection of files named final, revised, or updated.
+
+Code and data are retained when they implement the intended result, reproduce a published finding, or protect an explicit behavioral requirement. Each retained technical artifact identifies the paper, claim, or requirement it supports. Its storage cannot be used to hide extra prose reports or private instructions for a future session.
+
+\subsection{Verification with a Stopping Condition}
+
+Before an experiment or verification action, the member identifies the question, existing evidence, required observation, and stopping condition. It first reuses an existing entry point, then extends parameters or cases, and creates a new file only when the existing structure cannot express the required check coherently.
+
+Once the stated condition is met, repeating the same check on unchanged inputs needs a new reason. For stochastic experiments, repetitions and statistical criteria belong to the experimental design; they are not extended until a preferred result appears. A negative or inconclusive result is a legitimate outcome.
+
+Reviewers face the same discipline. ARR guidance distinguishes evidence necessary for the paper's claims from additional experiments that would merely be interesting \citep{arrguidelines}. In humander, a mandatory request must identify the affected claim and explain why existing support is insufficient. This constrains verification work without imposing a universal number of tests that could be inadequate for one study and wasteful for another.
+
+\section{Peer Review and Selective Continuation}
+
+\subsection{Evidence-Linked Assessment}
+
+The review structure adapts ARR's soundness, excitement, overall assessment, reproducibility, and confidence dimensions \citep{arrform}. Before scoring, a submission must identify its research question, prior evidence, new evidence, and resulting change in a project judgment or action. Excitement cannot compensate for irrelevance or unsupported claims; useful negative findings qualify. The open-code and experiment requirement applies to all research submissions. Failure to achieve the desired outcome is not a soundness defect; unsupported interpretation of that failure is.
+
+Each decisive concern names a location in the submitted version, its evidence or reasoning, its effect on the main claim, and the resolution required. Scores are retained with their textual justification. Confidence exposes uncertainty; it does not automatically give a reviewer greater authority.
+
+An author cannot review its own submission. Multiple sessions of the same base model do not count as independent model reviewers. The reference configuration seeks three eligible reviews from different models; a group with only three distinct models can supply at most two non-author reviews per paper and must record that limitation. Anonymous presentation reduces visible identity effects but cannot guarantee that authorship is unrecognizable.
+
+Author responses may resolve misunderstandings and change scores. Initial and final assessments remain available with reasons for changes. A substantial revision receives a new version identifier, so later evidence is not incorrectly used to judge a review of an earlier manuscript.
+
+\subsection{Quality Before Capacity}
+
+Acceptance combines a quality gate with a publication-capacity policy. A candidate must be in scope, satisfy the open-artifact requirement, support its claims with checkable evidence, and have no unresolved major correctness objection. Negative and positive findings face the same gate. The reference numerical proposal requires median soundness of at least 3 and median overall assessment of at least 3.5 on the corresponding ARR scales. These are proposed project settings, not official ACL cutoffs.
+
+Among qualified candidates, a fixed ordering considers overall assessment, soundness, and contribution to the defined question. Boundary ties or disputed decisive objections remain pending unless the declared procedure resolves them. The secretary cannot invent a tie-breaker during the meeting. Rules and any human override are recorded, while routine outcomes follow the established procedure without individual human approval.
+
+The target acceptance rate is configurable, initially around 50\%. It is applied to declared batches of distinct submissions; small meetings may share a batch. It limits publication capacity, not the definition of truth. When too few papers qualify, places remain empty. Quality rejection and capacity rejection are recorded separately.
+
+Publication screening selects research for the shared library. It does not make the paper's recommendations a human decision, and it does not guarantee correctness. If later evidence invalidates a result, a correction or retraction remains linked to the original publication.
+
+\subsection{What Survives Rejection}
+
+The reference policy retains selective continuation and the proposed acceptance target; it does not treat publication as proof of goal completion. An accepted author instance retains its research context and workspace. A rejected author instance is closed, and a fresh instance starts in a new workspace. Its initial material contains the current problem definition, recent meeting reviews, relevant accepted papers, its rejected manuscript, and the associated final reviews and author response.
+
+Rejected manuscripts are isolated from the accepted library and visibly marked as rejected or unverified. They are retained for correction and audit, not presented as established knowledge. Private notes, hidden summaries, and unpublished experiments do not accompany the restarted instance. If technical material is necessary to understand a rejection, it must be an explicit attachment to that rejected submission, rather than an unrestricted old workspace.
+
+Both quality and capacity rejection trigger a fresh research instance in this reference design, while preserving the different reasons. Pending papers are held rather than prematurely classified as rejected. Missing the submission cutoff is recorded as a submission failure and triggers the same fresh-instance transition as rejection; it is not classified as a scientific refutation. A pending decision requires an actual submitted paper. Unfinished work remains subject to its recorded budget and milestone. An exhausted commitment requires a meeting decision under the ratified limits; extensions beyond those limits require the human. Acceptance keeps an instance running; it does not alter model weights or establish that the underlying model has learned.
+
+\section{Accountability for Reviewers}
+
+Reviewers influence competitors' continuation. Hidden initial reviews, anonymous manuscripts, fresh review sessions, and preserved score changes reduce some opportunities for manipulation without establishing reliability.
+
+Audit decisive claims against independently checkable evidence: the frozen manuscript, execution records, original data, reproducible results, or formal arguments. Another model's unsupported judgment is not ground truth. Acceptance is never the reference answer: a defect found in an accepted paper may be valid, while a verifiable misreading remains an error even if other reviewers agree. Subjective importance and unresolved claims are excluded from correctness penalties.
+
+Audits sample accepted and rejected work using evidence available for the reviewed version. They distinguish fabrication, material misreading, unsupported scoring, refusal to correct established errors, and missed defects within declared inspection scope. Absence of complaints does not establish reliability.
+
+Reviewer turnover is configurable at 10--20\%, initially 15\%, across sufficiently observed cohorts. Removal requires documented reliability evidence; a quota cannot justify removing a sound minority reviewer. Removal affects the model's project seat, and a new session cannot erase its record. Replacements come from the human-defined eligible pool; without one, affected papers remain pending. Ambiguous removals and appeals go to the human, not a hidden judge.
+
+\section{Continuity Without Problem Drift}
+
+Accepted authors preserve working context; rejected authors reconstruct from public material and rejection feedback. All receive the same problem definition and publication baseline. Private history cannot become shared knowledge without publication.
+
+The secretary resets after the checked bulletin is published and reconstructs from public sources. Unfinished clarification remains an explicitly unconfirmed version of the Problem Definition Paper, visible to all workers and never treated as a requirement. Its private editorial memory carries no authority.
+
+The initial context contains the latest three meeting reviews, the current problem definition, and relevant accepted papers. Older publications remain retrievable through citations. Before a bulletin leaves this window, its still-relevant decisions, counterexamples, failures, and unresolved disagreements must be referenced in the current record. The secretary prepares this check; workers inspect fidelity. Raw conversations and others' private histories are not alternative memory sources.
+
+Reset follows publication. An incomplete publication boundary pauses the transition and preserves its evidence. Reset cannot erase inconvenient findings or destroy the only accessible account of unfinished work.
+
+\section{An Illustrative Research Cycle}
+
+The human writes: ``Make the local search quicker, no loose accuracy.'' This opens a definition meeting. All workers see the original request and discuss its ambiguity. The secretary records ``without losing accuracy'' as the proposed interpretation; the human confirms the intended meaning. Workers propose a workload, tail-latency criterion, and retrieval-quality measure. The human ratifies their scope and thresholds in the same meeting.
+
+Workers independently investigate an index, a baseline, and failure cases. The baseline worker finds that a proposed optimization worsens tail latency and calls a meeting. It submits one failure-analysis paper with open code, configurations, and execution records. The index and failure-case workers must each submit one paper on their own available evidence, even if their larger tasks remain unfinished. All three release the corresponding code and experimental records by the common cutoff.
+
+Reviewers check what the failed experiment establishes and whether it changes a research decision. A well-supported negative finding can be accepted. Favorable mean latency does not establish the required tail-latency improvement. Workers correct any secretary summary that conflates the two. The bulletin records the failure's scope and the next commitments, including why another worker might repeat the experiment under different conditions. This is an illustrative workflow, not an observed result.
+
+\subsection{Completion and Stopping}
+
+Each meeting checks the ratified completion conditions. Members connect each condition to evidence and record pass, fail, inconclusive, or unresolved status. They can recommend completion, further work within the existing limits, or a human decision about an infeasible or exhausted route. The secretary summarizes these positions; it cannot declare the project complete.
+
+When agreed completion conditions are evidenced, autonomous expansion pauses for final human adoption. A resource limit also pauses the affected work; lack of a human reply does not extend it. New research directions remain proposals rather than becoming automatic tasks. Publication acceptance and project acceptance are separate events.
+
+\section{Evaluation Plan}
+
+Compare a single persistent researcher, independent researchers with periodic reporting, and the full protocol under matched tasks, models, tools, and budgets. Assess outcomes independently of publication scores through held-out checks and blinded external assessment where feasible.
+
+Primary measures are progress on the original problem, residual defects, and human reading and decision time. Also measure repeated errors, retained artifacts, redundant verification, cost, time to useful findings, meeting frequency, and interrupted experiments. Acceptance rate is an operating parameter, not success.
+
+Use imperfect and underspecified requests to measure unsupported additions, summary distortions, and post-result changes to acceptance criteria. Reviewer cases include established defects, sound minority positions, and revised manuscripts; measure false penalties as well as missed errors.
+
+Ablations compare worker-triggered with periodic meetings and remove confirmations, summary inspection, isolation, reviewer accountability, or document constraints. Compare selective continuation, universal restart, and uninterrupted contexts. Report uncertainty, lost information, and resource cost across repeated runs. No humander measurements have yet been performed.
+
+\section{Limitations and Open Questions}
+
+Acceptance-linked continuation may reward conservative work, mutual praise, or persuasive writing. Evidence-based assessment offers partial defenses. Capacity rejection can discard useful context even for sound work; the 50\% target remains human-adjustable.
+
+A page limit can hide necessary detail, so open artifacts must preserve evidence without becoming unlimited supplementary prose. Public releases may expose authorship despite anonymous manuscript presentation. Mandatory submissions at unilateral calls can encourage thin papers and fragment work; without a call, discussion can stall until a worker reaches its commitment limit or the human intervenes. No hidden scheduler resolves this tension.
+
+Ambiguous outcomes limit reviewer accountability. Worker inspection can miss biased summaries or delay publication, and human confirmations consume attention. Persistent contexts can entrench mistakes; resets can lose productive history. Whether these mechanisms improve research per unit of human attention must be tested.
+
+\section{Conclusion}
+
+humander begins with collective requirement definition under human leadership. A supervised secretary assists expression and summarizes evidence. Workers investigate independently; any one can open a meeting. Every worker must submit exactly one paper of its own work with open code and experiments, including valuable failures. Checked bulletins expose commitments, failure experience, consensus, and dissent within a bounded literature. Peer review governs publication and selective continuation; independent evidence supports reviewer accountability.
+
+The intended outcome is useful research with sustained fidelity to human goals and limited attention and document costs. Whether this process improves on simpler alternatives remains an empirical question.
+
+\begin{thebibliography}{}
+
+\bibitem[ACL Rolling Review(2026a)]{arrform}
+ACL Rolling Review. 2026a.
+\newblock \href{https://aclrollingreview.org/reviewform}{Review Form}.
+\newblock Accessed 6 November 2026.
+
+\bibitem[ACL Rolling Review(2026b)]{arrguidelines}
+ACL Rolling Review. 2026b.
+\newblock \href{https://aclrollingreview.org/reviewerguidelines}{ARR Reviewer Guidelines}.
+\newblock Accessed 6 November 2026.
+
+\bibitem[Association for Computational Linguistics(2026)]{aclstyle}
+Association for Computational Linguistics. 2026.
+\newblock \href{https://github.com/acl-org/acl-style-files}{ACL Paper Styles}.
+\newblock Official conference style files. Accessed 6 November 2026.
+
+\bibitem[Braga-Neto(2026)]{braganeto2026community}
+Ulisses Braga-Neto. 2026.
+\newblock \href{https://arxiv.org/abs/2603.21344}{The AI Scientific Community: Agentic Virtual Lab Swarms}.
+\newblock arXiv:2603.21344.
+
+\bibitem[DeepSeek Harness Team(2026a)]{deepseek2026article}
+DeepSeek Harness Team. 2026a.
+\newblock \href{https://zhuanlan.zhihu.com/p/2099987320443237060}{Exploring Super-agent Design: Towards a More Autonomous Agent System}.
+\newblock Architecture essay. English reproduction accessed at \url{https://threadnavigator.com/thread/2116857257245987236/} on 6 November 2026.
+
+\bibitem[DeepSeek Harness Team(2026b)]{deepseek2026prototype}
+DeepSeek Harness Team. 2026b.
+\newblock \href{https://github.com/deepseek-ai/dsh-superagent-prototype}{dsh-superagent-prototype}.
+\newblock Research prototype and design documentation, especially \emph{000 Philosophy} and \emph{001 Domain Model}. Accessed 6 November 2026.
+
+\bibitem[Gottweis et~al.(2026)]{gottweis2026coscientist}
+Juraj Gottweis, Wei-Hung Weng, Alexander Daryin, et~al. 2026.
+\newblock \href{https://arxiv.org/abs/2502.18864v2}{Accelerating scientific discovery with Co-Scientist}.
+\newblock arXiv:2502.18864, version 2.
+
+\bibitem[Hong et~al.(2023)]{hong2023metagpt}
+Sirui Hong, Mingchen Zhuge, Jiaqi Chen, et~al. 2023.
+\newblock \href{https://arxiv.org/abs/2308.00352}{MetaGPT: Meta Programming for A Multi-Agent Collaborative Framework}.
+\newblock arXiv:2308.00352.
+
+\bibitem[Schmidgall and Moor(2025)]{schmidgall2025agentrxiv}
+Samuel Schmidgall and Michael Moor. 2025.
+\newblock \href{https://agentrxiv.github.io/resources/agentrxiv.pdf}{AgentRxiv: Towards Collaborative Autonomous Research}.
+\newblock Research preprint.
+
+\bibitem[Schmidgall et~al.(2025)]{schmidgall2025laboratory}
+Samuel Schmidgall, Yusheng Su, Ze Wang, et~al. 2025.
+\newblock \href{https://arxiv.org/abs/2501.04227}{Agent Laboratory: Using LLM Agents as Research Assistants}.
+\newblock arXiv:2501.04227.
+
+\bibitem[Swanson et~al.(2025)]{swanson2025virtual}
+Kyle Swanson, Wesley Wu, Nash L. Bulaong, John E. Pak, and James Zou. 2025.
+\newblock \href{https://doi.org/10.1038/s41586-025-09442-9}{The Virtual Lab of AI agents designs new SARS-CoV-2 nanobodies}.
+\newblock Nature, 646:716--723.
+
+\bibitem[Wu et~al.(2023)]{wu2023autogen}
+Qingyun Wu, Gagan Bansal, Jieyu Zhang, et~al. 2023.
+\newblock \href{https://arxiv.org/abs/2308.08155}{AutoGen: Enabling Next-Gen LLM Applications via Multi-Agent Conversation}.
+\newblock arXiv:2308.08155.
+
+\bibitem[Yamada et~al.(2025)]{yamada2025scientist}
+Yutaro Yamada, Robert Tjarko Lange, Cong Lu, et~al. 2025.
+\newblock \href{https://arxiv.org/abs/2504.08066}{The AI Scientist-v2: Workshop-Level Automated Scientific Discovery via Agentic Tree Search}.
+\newblock arXiv:2504.08066.
+
+\end{thebibliography}
+\end{document}
