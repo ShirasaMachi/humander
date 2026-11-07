@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "humander": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["${CODEBUDDY_PLUGIN_ROOT}/dist/cli.mjs"],
+      "runtime": { "type": "node", "version": ">=24.0.0" },
+      "timeout": 300000
+    }
+  }
+}

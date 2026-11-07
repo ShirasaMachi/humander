@@ -59,8 +59,9 @@ export class Artifacts {
       writeFileSync(join(tmp, 'manifest.json'), JSON.stringify({ artifactHash, files: manifest }, null, 2));
       const release = join(this.root, artifactHash);
       if (existsSync(release)) rmSync(tmp, { recursive: true }); else renameSync(tmp, release);
-      requireThat(this.config.publicBaseUrl, 'Configure an externally reachable publicBaseUrl before accepting research submissions');
-      const releaseUrl = `${this.config.publicBaseUrl.replace(/\/$/, '')}/releases/${artifactHash}`;
+      const publishedUrl = this.config.publishRelease ? await this.config.publishRelease(release, artifactHash, manifest, signal) : null;
+      requireThat(publishedUrl || this.config.publicBaseUrl, 'Configure an externally reachable publicBaseUrl before accepting research submissions');
+      const releaseUrl = publishedUrl || `${this.config.publicBaseUrl.replace(/\/$/, '')}/releases/${artifactHash}`;
       const response = await fetch(`${releaseUrl}/manifest.json`, { signal: AbortSignal.any([signal ?? new AbortController().signal, AbortSignal.timeout(10000)]), redirect: 'error' });
       requireThat(response.ok, 'The open release is not reachable at publicBaseUrl');
       const publicManifest = await response.json();

@@ -670,6 +670,7 @@ export class Protocol {
         s.replacementPool=s.replacementPool.filter(m=>m.model!==replacement.replacement.model);
       }
       s.failureArchive.push(...s.meeting.failures);
+      for (const member of s.members) member.sessionId = null;
       s.secretarySessionId = null; s.runtime.requestCounts = {}; s.phase = 'RESEARCH';
       if (s.meeting.number >= s.rules.maxMeetings || s.projectCalls >= s.rules.maxProjectCalls) { s.pausedPhase = 'RESEARCH'; s.phase = 'PAUSED'; s.pausedAt = this.now(); s.pauseReason = 'Human-ratified project budget reached'; }
     });

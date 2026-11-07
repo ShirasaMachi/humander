@@ -95,8 +95,10 @@ test('valuable failure can be accepted; rejection resets only after publication;
   p.preparePublication();
   assert.throws(() => p.publish({ meetingId: p.state.meeting.id, pages: 11, hash: 'x' }), /receipt/);
   assert.equal(p.state.members[3].generation, 0);
+  p.setSession('a', 'accepted-worker-old-session'); p.setSession('d', 'rejected-worker-old-session');
   p.publish({ meetingId: p.state.meeting.id, pages: 2, hash: 'actual-publication-receipt' });
   assert.equal(p.state.members[0].generation, 0); assert.equal(p.state.members[3].generation, 1);
+  assert.equal(p.state.members.every(m => m.sessionId === null), true);
   const reopened = new Protocol(join(root, 'state.sqlite')); assert.equal(reopened.state.members[3].rejection.paper.title, 'Paper d'); reopened.close();
 });
 
