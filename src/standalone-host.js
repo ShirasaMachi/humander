@@ -78,7 +78,14 @@ export class StandaloneHost {
             tools: [...registered.values()].map(tool => ({ type: 'function', function: { name: tool.name, description: tool.description, parameters: schema(tool.parameters) } })),
             tool_choice: 'auto', max_tokens: 6000 }),
         });
-        const result = await response.json();
+        const body = await response.text();
+        let result;
+        try { result = JSON.parse(body); }
+        catch {
+          const endpoint = new URL(`${base}/chat/completions`);
+          const detail = body.trim().slice(0, 200) || 'empty response';
+          throw new Error(`Model endpoint ${endpoint.origin}${endpoint.pathname} returned HTTP ${response.status} with non-JSON body: ${detail}. Check the provider base URL and API path.`);
+        }
         if (!response.ok) throw new Error(`Model HTTP ${response.status}: ${JSON.stringify(result).slice(0, 400)}`);
         const message = result.choices?.[0]?.message;
         if (!message) throw new Error('Model returned no message');

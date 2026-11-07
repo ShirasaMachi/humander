@@ -43,8 +43,11 @@ const runtime = new Runtime(host, config);
 const nonce = randomBytes(32).toString('hex');
 const uiScript = readFileSync(new URL('./ui.js', import.meta.url), 'utf8');
 const baseHtml = readFileSync(new URL('./panel.html', import.meta.url), 'utf8');
-const uiHtml = baseHtml.replace('<title>humander · Human-led research</title>',
-  `<title>humander · Human-led research</title><meta name="humander-gateway"><meta name="humander-workbuddy"><script>window.HUMANDER_APP_NONCE=${JSON.stringify(nonce)};</script><script>${uiScript.replaceAll('</script', '<\\/script')}</script>`);
+const uiHtml = baseHtml
+  .replace('<title>humander · Human-led research</title>',
+    '<title>humander · Human-led research</title><meta name="humander-gateway"><meta name="humander-workbuddy">')
+  .replace('<script type="module">', () =>
+    `<script type="module">window.HUMANDER_APP_NONCE=${JSON.stringify(nonce)};\n${uiScript.replaceAll('</script', '<\\/script')}\n`);
 const server = new Server({ name: 'humander', version: '0.1.0' }, { capabilities: { tools: {}, resources: {} } });
 const output = value => ({ content: [{ type: 'text', text: JSON.stringify(value) }], structuredContent: value });
 const failure = error => ({ content: [{ type: 'text', text: error.message }], isError: true });
