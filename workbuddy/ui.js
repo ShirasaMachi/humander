@@ -31,6 +31,21 @@ window.fetch = async (input, init = {}) => {
 };
 
 window.addEventListener('DOMContentLoaded', () => {
+  const display = document.createElement('button');
+  display.textContent = 'Fullscreen / 全屏';
+  display.className = 'secondary';
+  display.onclick = async () => {
+    try {
+      await ready;
+      const current = app.getHostContext()?.displayMode;
+      const target = current === 'fullscreen' ? 'inline' : 'fullscreen';
+      const modes = app.getHostContext()?.availableDisplayModes;
+      if (modes && !modes.includes(target)) throw new Error('This WorkBuddy version does not support the requested panel display mode. / 当前 WorkBuddy 版本不支持该面板显示方式。');
+      const result = await app.requestDisplayMode({ mode: target });
+      display.textContent = result.mode === 'fullscreen' ? 'Inline / 返回对话' : 'Fullscreen / 全屏';
+    } catch (error) { document.getElementById('error').textContent = error.message; }
+  };
+  document.querySelector('header')?.append(display);
   const button = document.createElement('button');
   button.textContent = 'Refresh / 刷新';
   button.className = 'secondary';
