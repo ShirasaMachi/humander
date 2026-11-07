@@ -146,7 +146,7 @@ test('workspace rejects traversal, dangling symlinks and extra prose documents',
 
 test('missing sandbox fails closed and never executes experiment code on host', async t => {
   const { p, root } = setup(t); define(p); publish(p);
-  const w = new Workspaces(join(root, 'work'), p, { bwrap: '/nonexistent/humander-sandbox' });
+  const w = new Workspaces(join(root, 'work'), p, { sandboxBackend: 'bubblewrap', bwrap: '/nonexistent/humander-sandbox' });
   w.write('a', 'src/main.py', 'print(1)', 'Q1', 'Implement the baseline.');
   await assert.rejects(w.experiment('a', { command: 'python3 src/main.py', questionId: 'Q1', purpose: 'Measure baseline', stopCondition: 'One execution' }), /ENOENT/);
 });
