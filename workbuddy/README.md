@@ -8,7 +8,7 @@ The repository includes a CodeBuddy-compatible marketplace at its root. In curre
 
 For a local development installation, select the `workbuddy` directory as the plugin directory. The MCP server entrypoint is `dist/cli.mjs`. Node.js 24 or newer is required. The plugin declares a WorkBuddy-managed Node runtime, though exact plugin-manager and MCP Apps behavior still depends on the installed WorkBuddy desktop version.
 
-Open a WorkBuddy task and ask it to open Humander. The model calls `humander_open`; WorkBuddy should show the MCP App in the conversation or artifact pane. The panel lets the human configure providers, worker and secretary models, project rules, and a public publication repository. Then the human starts the requirement meeting. WorkBuddy may call `humander_advance` while this task is active. Closing WorkBuddy stops progress; the SQLite state and model sessions are restored on the next launch. No separate resident service or external scheduler is installed.
+Open a WorkBuddy task and ask it to open Humander. The model calls `humander_open`; WorkBuddy should show the MCP App in the conversation or artifact pane. Use **Fullscreen / 全屏** in the panel header to expand it within WorkBuddy when the host supports MCP App display modes. The panel lets the human configure providers, worker and secretary models, project rules, and a public publication repository. Then the human starts the requirement meeting. WorkBuddy may call `humander_advance` while this task is active. Closing WorkBuddy stops progress; the SQLite state and model sessions are restored on the next launch. No separate resident service or external scheduler is installed.
 
 ## Required local tools
 
