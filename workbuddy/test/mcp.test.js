@@ -22,6 +22,10 @@ test('bundled WorkBuddy MCP server exposes its app and keeps human actions behin
     assert.equal(tools.tools.find(t => t.name === 'humander_app_action')._meta.ui.visibility.includes('app'), true);
     const resource = await client.readResource({ uri: 'ui://humander/panel' });
     assert.match(resource.contents[0].text, /humander-workbuddy/);
+    assert.equal(resource.contents[0].text.match(/<script\b/g)?.length, 1);
+    const panelScript = resource.contents[0].text.match(/<script type="module">([\s\S]*?)<\/script>/)?.[1];
+    assert.ok(panelScript);
+    assert.doesNotThrow(() => new Function(panelScript));
     const open = await client.callTool({ name: 'humander_open', arguments: {} });
     assert.equal(open.isError, undefined);
     const denied = await client.callTool({ name: 'humander_app_action', arguments: { nonce: 'wrong', input: { action: 'stop' } } });

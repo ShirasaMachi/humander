@@ -38,3 +38,18 @@ test('standalone model session executes a protocol tool and resumes its saved co
     assert.equal(observed.at(-2).messages.some(m => m.content === 'first turn'), true);
   } finally { globalThis.fetch = original; rmSync(root, { recursive: true, force: true }); }
 });
+
+test('plain-text model 404 identifies the incorrect endpoint', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'humander-host-'));
+  const original = globalThis.fetch;
+  try {
+    globalThis.fetch = async () => new Response('Not Found', { status: 404 });
+    const host = new StandaloneHost(root);
+    await assert.rejects(
+      host.turn({ id: 'probe', abort: null, status: 'idle' },
+        { baseUrl: 'http://127.0.0.1:12345/v1', allowNoKey: true },
+        'mock', 'probe', new Map(), new Map(), []),
+      /Model endpoint http:\/\/127\.0\.0\.1:12345\/v1\/chat\/completions returned HTTP 404 with non-JSON body: Not Found/,
+    );
+  } finally { globalThis.fetch = original; rmSync(root, { recursive: true, force: true }); }
+});
