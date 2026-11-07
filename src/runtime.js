@@ -1,8 +1,7 @@
 import { join } from 'node:path';
 import { mkdirSync, readFileSync, existsSync, writeFileSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
-import { defineTool } from '@deepseek-ai/dsh-tools';
-import { createUserMessage } from '@deepseek-ai/dsh-llm';
+import { defineTool, createUserMessage } from './agent-bridge.js';
 import { Protocol, requireThat, digest, teamChecked } from './protocol.js';
 import { Workspaces, safePath } from './workspace.js';
 import { Artifacts } from './artifacts.js';
@@ -27,7 +26,7 @@ export class Runtime {
   async modelCatalog(provider) {
     const providers = this.ctx.llm.listProviders().map(({ id, name }) => ({ id, name }));
     if (!provider) return { providers };
-    requireThat(providers.some(p => p.id === provider), 'Provider is not configured in Harness');
+    requireThat(providers.some(p => p.id === provider), `Provider is not configured in ${this.config.standalone ? 'Humander' : 'Harness'}`);
     let timer;
     try {
       const models = await Promise.race([this.ctx.llm.listModels(provider), new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Model catalog timed out; enter the exact model ID or retry')), 10000); })]);
@@ -38,10 +37,10 @@ export class Runtime {
   async validateRoutes(routes) {
     const providers = new Set(this.ctx.llm.listProviders().map(p => p.id));
     for (const route of new Map(routes.map(r => [JSON.stringify([r.provider,r.model]),r])).values()) {
-      requireThat(providers.has(route.provider), `Provider ${route.provider} is not configured in Harness`);
+      requireThat(providers.has(route.provider), `Provider ${route.provider} is not configured in ${this.config.standalone ? 'Humander' : 'Harness'}`);
       let timer;
       try { await Promise.race([this.ctx.llm.resolveModelInfo(route.provider, route.model, AbortSignal.timeout(10000)), new Promise((_, reject) => { timer=setTimeout(()=>reject(new Error('Model lookup timed out')),10000); })]); }
-      catch { throw new Error(`Harness could not resolve model ${route.provider} / ${route.model}; check the model ID and provider settings`); }
+      catch { throw new Error(`${this.config.standalone ? 'Humander' : 'Harness'} could not resolve model ${route.provider} / ${route.model}; check the model ID and provider settings`); }
       finally { clearTimeout(timer); }
     }
   }
@@ -299,8 +298,7 @@ export class Runtime {
           const receipt = await this.artifacts.bulletin(s, AbortSignal.any([this.lifetime.signal, this.phaseAbort.signal]));
           this.protocol.publish(receipt);
           for (const [key, handle] of this.handles) {
-            const keep = this.protocol.state.members.some(m => m.active && !m.suspended && key === `${m.id}:${m.generation}`);
-            if (!keep) { await handle.dispose(); this.handles.delete(key); }
+            await handle.dispose(); this.ctx.retireSession?.(handle.agent.id); this.handles.delete(key);
           }
           this.workspaces.cleanupPublished();
           break;

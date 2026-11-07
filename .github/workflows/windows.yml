@@ -2,6 +2,7 @@ name: Windows
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 permissions:
   contents: read
@@ -16,3 +17,11 @@ jobs:
       - run: npm install --ignore-scripts --no-package-lock
       - run: npm test
       - run: npm pack --ignore-scripts --dry-run
+      - run: npm ci --ignore-scripts
+        working-directory: workbuddy
+      - run: npm run build
+        working-directory: workbuddy
+      - run: npm test
+        working-directory: workbuddy
+        env:
+          HUMANDER_MCP_STDIO_TEST: '1'

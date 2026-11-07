@@ -1,0 +1,19 @@
+{
+  "name": "humander-workbuddy",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Standalone Humander runtime for WorkBuddy desktop",
+  "scripts": {
+    "build": "node build.js",
+    "test": "node --test --test-isolation=none test/*.test.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/ext-apps": "^2.0.4",
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  }
+}

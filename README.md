@@ -1,5 +1,7 @@
 # humander
 
+For the standalone Tencent WorkBuddy desktop plugin, see [workbuddy/README.md](workbuddy/README.md). It uses its own local MCP runtime and does not require DSH. The instructions below describe the separate DSH plugin.
+
 A DeepSeek Harness plugin for a human-led research organization. Workers independently investigate a ratified problem, open meetings themselves, submit exactly one paper each, review evidence, inspect the secretary's bulletin, and continue or restart after publication.
 
 This is a working protocol prototype, not a claim of autonomous scientific competence. Research publications use the project-selected English or Chinese language. The design paper is in `papers/`.
