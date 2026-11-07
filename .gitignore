@@ -1,0 +1,12 @@
+node_modules
+*.tgz
+.humander/
+coverage/
+.env
+.env.*
+!.env.example
+*.log
+*.sqlite
+*.sqlite-*
+operator.token
+.DS_Store
